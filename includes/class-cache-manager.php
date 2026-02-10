@@ -25,6 +25,13 @@ class Cache_Manager {
         $this->enforce_limit();
     }
 
+    public function delete_avatar($hash) {
+        $file = $this->cache_dir . '/' . $hash . '.jpg';
+        if (file_exists($file)) {
+            unlink($file);
+        }
+    }
+
     public function cleanup() {
         $files = glob($this->cache_dir . '/*.jpg');
         foreach ($files as $f) {

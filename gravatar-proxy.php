@@ -3,7 +3,7 @@
 Plugin Name: Gravatar Proxy
 Plugin URI: https://github.com/bobo334/gravatar-proxy
 Description: 本地代理 Gravatar 头像，提升加载速度
-Version: 1.0.0
+Version: 1.1.0
 Author: bobo
 License: GPL v2 or later
 */
@@ -13,11 +13,11 @@ if (!defined('ABSPATH')) {
 }
 
 // 常量定义
-define('GRAVATAR_PROXY_VERSION', '1.0.0');
+define('GRAVATAR_PROXY_VERSION', '1.1.0');
 define('GRAVATAR_PROXY_PATH', plugin_dir_path(__FILE__));
 define('GRAVATAR_PROXY_URL', plugin_dir_url(__FILE__));
 define('GRAVATAR_CACHE_DIR', WP_CONTENT_DIR . '/cache/gravatar');
-define('GRAVATAR_CACHE_EXPIRY', 30 * 24 * 60 * 60); // 30 天
+define('GRAVATAR_CACHE_EXPIRY', 7 * 24 * 60 * 60); // 7 天
 
 // 加载依赖类
 require_once GRAVATAR_PROXY_PATH . 'includes/class-gravatar-proxy.php';
@@ -34,8 +34,16 @@ add_action('plugins_loaded', 'gravatar_proxy_init');
 add_action('init', function () {
     if (isset($_GET['hash']) && preg_match('/^[a-f0-9]{32}$/', $_GET['hash'])) {
         $hash = $_GET['hash'];
+        $refresh = isset($_GET['refresh']) && $_GET['refresh'] === '1';
         $cache = new Cache_Manager();
-        $avatar = $cache->get_avatar($hash);
+        
+        if ($refresh) {
+            $cache->delete_avatar($hash);
+            $avatar = false;
+        } else {
+            $avatar = $cache->get_avatar($hash);
+        }
+        
         if (!$avatar) {
             $remote = wp_remote_get('https://www.gravatar.com/avatar/' . $hash);
             if (!is_wp_error($remote) && isset($remote['body'])) {

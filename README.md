@@ -6,6 +6,7 @@
 
 - 本地缓存 Gravatar 头像，减少外部请求
 - 自动缓存管理，支持缓存过期时间设置
+- 支持强制刷新头像缓存
 - CDN 支持，可配置 CDN 加速
 - 默认头像回退机制
 - 简单易用，无需复杂配置
@@ -39,6 +40,16 @@ https://yourdomain.com/?hash={gravatar_hash}
 
 其中 `{gravatar_hash}` 是用户的 Gravatar MD5 哈希值。
 
+### 强制刷新头像
+
+如果用户在 Gravatar 上更新了头像，可以通过添加 `refresh=1` 参数强制刷新缓存：
+
+```
+https://yourdomain.com/?hash={gravatar_hash}&refresh=1
+```
+
+这会删除该头像的缓存并从 Gravatar 重新获取最新头像。
+
 ## 配置选项
 
 插件提供以下配置常量，可在 `wp-config.php` 中自定义：
@@ -47,8 +58,8 @@ https://yourdomain.com/?hash={gravatar_hash}
 // 缓存目录（默认：WP_CONTENT_DIR . '/cache/gravatar'）
 define('GRAVATAR_CACHE_DIR', WP_CONTENT_DIR . '/cache/gravatar');
 
-// 缓存过期时间（默认：30天，单位：秒）
-define('GRAVATAR_CACHE_EXPIRY', 30 * 24 * 60 * 60);
+// 缓存过期时间（默认：7天，单位：秒）
+define('GRAVATAR_CACHE_EXPIRY', 7 * 24 * 60 * 60);
 ```
 
 ## 系统要求
@@ -95,6 +106,11 @@ bobo
 感谢所有为本项目做出贡献的开发者。
 
 ## 更新日志
+
+### 1.1.0
+- 添加强制刷新头像缓存功能
+- 优化缓存过期时间从30天缩短到7天
+- 新增 delete_avatar 方法用于删除指定头像缓存
 
 ### 1.0.0
 - 初始版本发布
