@@ -146,17 +146,40 @@ class Gravatar_Proxy {
             <h1>Gravatar Proxy 设置</h1>
 
             <style>
-                .gravatar-proxy-grid { display: flex; flex-wrap: wrap; gap: 16px; }
-                .gravatar-proxy-card { max-width: 680px; width: 100%; padding: 16px; border: 1px solid #e2e4e7; border-radius: 8px; background: #fff; box-shadow: 0 1px 2px rgba(0,0,0,0.04); }
-                .gravatar-proxy-card h2 { margin-top: 0; }
-                .gravatar-proxy-card .form-table th { width: 160px; }
-                .gravatar-proxy-actions { margin-top: 12px; display: flex; gap: 8px; align-items: center; }
+                .gravatar-proxy-hero {
+                    padding: 16px 20px;
+                    border: 1px solid #dcdcde;
+                    border-radius: 12px;
+                    background: linear-gradient(135deg, #f7f4ff 0%, #f0f6ff 100%);
+                    box-shadow: 0 2px 6px rgba(0,0,0,0.04);
+                    margin: 12px 0 16px;
+                }
+                .gravatar-proxy-hero-title { margin: 0 0 4px; font-size: 20px; }
+                .gravatar-proxy-hero-sub { color: #50575e; margin: 0; }
+                .gravatar-proxy-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 16px; }
+                .gravatar-proxy-card { padding: 16px; border: 1px solid #e2e4e7; border-radius: 12px; background: #fff; box-shadow: 0 1px 2px rgba(0,0,0,0.04); }
+                .gravatar-proxy-card h2 { margin: 0 0 12px; font-size: 16px; }
+                .gravatar-proxy-card .form-table th { width: 140px; }
+                .gravatar-proxy-actions { margin-top: 12px; display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+                .gravatar-proxy-badges { display: flex; gap: 10px; flex-wrap: wrap; margin: 4px 0 8px; }
+                .gravatar-proxy-badge { background: #f6f7f7; border: 1px solid #e2e4e7; border-radius: 999px; padding: 4px 10px; font-size: 12px; color: #50575e; }
                 .gravatar-proxy-help { color: #646970; font-size: 12px; margin-top: 4px; }
+                .gravatar-proxy-input-note { margin-top: 6px; color: #646970; font-size: 12px; }
+                .gravatar-proxy-form .submit { margin-top: 10px; }
             </style>
+
+            <div class="gravatar-proxy-hero">
+                <h2 class="gravatar-proxy-hero-title">头像缓存与分发</h2>
+                <p class="gravatar-proxy-hero-sub">管理缓存策略、CDN 地址与本地存储位置。</p>
+            </div>
 
             <div class="gravatar-proxy-grid">
             <div class="gravatar-proxy-card">
                 <h2>缓存概览</h2>
+                <div class="gravatar-proxy-badges">
+                    <span class="gravatar-proxy-badge">目录：<?php echo esc_html($cache_dir); ?></span>
+                    <span class="gravatar-proxy-badge">过期：<?php echo esc_html($cache_expiry); ?> 秒</span>
+                </div>
                 <table class="form-table">
                     <tr>
                         <th scope="row">缓存文件数</th>
@@ -179,7 +202,7 @@ class Gravatar_Proxy {
 
             <div class="gravatar-proxy-card">
             <h2>插件设置</h2>
-            <form method="post" action="options.php">
+            <form method="post" action="options.php" class="gravatar-proxy-form">
                 <?php
                 settings_fields('gravatar_proxy_options');
                 do_settings_sections('gravatar-proxy');
