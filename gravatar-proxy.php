@@ -99,9 +99,14 @@ add_action('template_redirect', function () {
                 $avatar = is_readable($default) ? file_get_contents($default) : '';
             }
         }
+        $default_expiry = defined('GRAVATAR_CACHE_EXPIRY') ? GRAVATAR_CACHE_EXPIRY : 7 * 24 * 60 * 60;
+        $cache_expiry = (int) get_option('gravatar_proxy_cache_expiry', $default_expiry);
+        if ($cache_expiry < 60) {
+            $cache_expiry = $default_expiry;
+        }
         header('Content-Type: image/jpeg');
-        header('Cache-Control: public, max-age=' . GRAVATAR_CACHE_EXPIRY);
-        header('Expires: ' . gmdate('D, d M Y H:i:s \G\M\T', time() + GRAVATAR_CACHE_EXPIRY));
+        header('Cache-Control: public, max-age=' . $cache_expiry);
+        header('Expires: ' . gmdate('D, d M Y H:i:s \G\M\T', time() + $cache_expiry));
         echo $avatar;
         exit;
     }

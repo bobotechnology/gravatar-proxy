@@ -4,8 +4,22 @@ class Cache_Manager {
     private $expiry;
 
     public function __construct() {
-        $this->cache_dir = GRAVATAR_CACHE_DIR;
-        $this->expiry = GRAVATAR_CACHE_EXPIRY;
+        $default_dir = defined('GRAVATAR_CACHE_DIR') ? GRAVATAR_CACHE_DIR : WP_CONTENT_DIR . '/cache/gravatar';
+        $default_expiry = defined('GRAVATAR_CACHE_EXPIRY') ? GRAVATAR_CACHE_EXPIRY : 7 * 24 * 60 * 60;
+
+        $cache_dir = get_option('gravatar_proxy_cache_dir', $default_dir);
+        $cache_dir = is_string($cache_dir) ? trim($cache_dir) : $default_dir;
+        if ($cache_dir === '') {
+            $cache_dir = $default_dir;
+        }
+
+        $expiry = (int) get_option('gravatar_proxy_cache_expiry', $default_expiry);
+        if ($expiry < 60) {
+            $expiry = $default_expiry;
+        }
+
+        $this->cache_dir = $cache_dir;
+        $this->expiry = $expiry;
         if (!is_dir($this->cache_dir)) {
             wp_mkdir_p($this->cache_dir);
         }

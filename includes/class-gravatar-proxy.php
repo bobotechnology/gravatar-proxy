@@ -82,7 +82,12 @@ class Gravatar_Proxy {
     }
 
     private function get_cache_stats() {
-        $cache_dir = GRAVATAR_CACHE_DIR;
+        $default_dir = defined('GRAVATAR_CACHE_DIR') ? GRAVATAR_CACHE_DIR : WP_CONTENT_DIR . '/cache/gravatar';
+        $cache_dir = get_option('gravatar_proxy_cache_dir', $default_dir);
+        $cache_dir = is_string($cache_dir) ? trim($cache_dir) : $default_dir;
+        if ($cache_dir === '') {
+            $cache_dir = $default_dir;
+        }
         $files = glob($cache_dir . '/*.jpg');
         $total_size = 0;
         foreach ($files as $file) {
@@ -106,16 +111,52 @@ class Gravatar_Proxy {
         register_setting('gravatar_proxy_options', 'gravatar_proxy_cache_size', [
             'sanitize_callback' => 'absint',
         ]);
+        register_setting('gravatar_proxy_options', 'gravatar_proxy_cache_dir', [
+            'sanitize_callback' => [$this, 'sanitize_cache_dir'],
+        ]);
+        register_setting('gravatar_proxy_options', 'gravatar_proxy_cache_expiry', [
+            'sanitize_callback' => [$this, 'sanitize_cache_expiry'],
+        ]);
+    }
+
+    public function sanitize_cache_dir($value) {
+        if (!is_string($value)) {
+            return '';
+        }
+        $value = trim(str_replace("\0", '', $value));
+        return $value;
+    }
+
+    public function sanitize_cache_expiry($value) {
+        $value = absint($value);
+        if ($value < 60) {
+            $value = 60;
+        }
+        return $value;
     }
 
     public function settings_page() {
         $stats = $this->get_cache_stats();
+        $default_dir = defined('GRAVATAR_CACHE_DIR') ? GRAVATAR_CACHE_DIR : WP_CONTENT_DIR . '/cache/gravatar';
+        $default_expiry = defined('GRAVATAR_CACHE_EXPIRY') ? GRAVATAR_CACHE_EXPIRY : 7 * 24 * 60 * 60;
+        $cache_dir = get_option('gravatar_proxy_cache_dir', $default_dir);
+        $cache_expiry = (int) get_option('gravatar_proxy_cache_expiry', $default_expiry);
         ?>
         <div class="wrap">
             <h1>Gravatar Proxy 设置</h1>
 
-            <h2>缓存管理</h2>
-            <div class="card" style="max-width: 600px; margin-bottom: 20px;">
+            <style>
+                .gravatar-proxy-grid { display: flex; flex-wrap: wrap; gap: 16px; }
+                .gravatar-proxy-card { max-width: 680px; width: 100%; padding: 16px; border: 1px solid #e2e4e7; border-radius: 8px; background: #fff; box-shadow: 0 1px 2px rgba(0,0,0,0.04); }
+                .gravatar-proxy-card h2 { margin-top: 0; }
+                .gravatar-proxy-card .form-table th { width: 160px; }
+                .gravatar-proxy-actions { margin-top: 12px; display: flex; gap: 8px; align-items: center; }
+                .gravatar-proxy-help { color: #646970; font-size: 12px; margin-top: 4px; }
+            </style>
+
+            <div class="gravatar-proxy-grid">
+            <div class="gravatar-proxy-card">
+                <h2>缓存概览</h2>
                 <table class="form-table">
                     <tr>
                         <th scope="row">缓存文件数</th>
@@ -127,15 +168,16 @@ class Gravatar_Proxy {
                     </tr>
                     <tr>
                         <th scope="row">缓存目录</th>
-                        <td><code><?php echo esc_html(GRAVATAR_CACHE_DIR); ?></code></td>
+                        <td><code><?php echo esc_html($cache_dir); ?></code></td>
                     </tr>
                 </table>
-                <form method="post" style="margin-top: 20px;">
+                <form method="post" class="gravatar-proxy-actions">
                     <?php wp_nonce_field('gravatar_proxy_clear_cache'); ?>
                     <input type="submit" name="gravatar_proxy_clear_cache" class="button button-secondary" value="清空所有缓存" onclick="return confirm('确定要清空所有缓存吗？');">
                 </form>
             </div>
 
+            <div class="gravatar-proxy-card">
             <h2>插件设置</h2>
             <form method="post" action="options.php">
                 <?php
@@ -153,9 +195,21 @@ class Gravatar_Proxy {
                         <td><input type="number" name="gravatar_proxy_cache_size" value="<?php echo esc_attr(get_option('gravatar_proxy_cache_size', 1000)); ?>" class="small-text" />
                         <p class="description">设置缓存最大文件数</p></td>
                     </tr>
+                    <tr valign="top">
+                        <th scope="row">缓存目录</th>
+                        <td><input type="text" name="gravatar_proxy_cache_dir" value="<?php echo esc_attr($cache_dir); ?>" class="regular-text code" />
+                        <p class="description">默认：<?php echo esc_html($default_dir); ?></p></td>
+                    </tr>
+                    <tr valign="top">
+                        <th scope="row">缓存过期</th>
+                        <td><input type="number" name="gravatar_proxy_cache_expiry" value="<?php echo esc_attr($cache_expiry); ?>" class="small-text" />
+                        <p class="description">单位：秒（最小 60 秒）。默认：<?php echo esc_html($default_expiry); ?></p></td>
+                    </tr>
                 </table>
                 <?php submit_button(); ?>
             </form>
+            </div>
+            </div>
         </div>
         <?php
     }
