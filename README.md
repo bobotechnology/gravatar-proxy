@@ -97,6 +97,10 @@ gravatar-proxy/
 
 GPL v2 or later
 
+## 项目主页
+
+https://github.com/bobotechnology/gravatar-proxy
+
 ## 更新日志
 
 ### 1.2.3

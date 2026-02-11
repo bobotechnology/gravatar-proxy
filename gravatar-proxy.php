@@ -1,7 +1,7 @@
 <?php
 /*
 Plugin Name: Gravatar Proxy
-Plugin URI: https://github.com/bobo334/gravatar-proxy
+Plugin URI: https://github.com/bobotechnology/gravatar-proxy
 Description: 本地代理 Gravatar 头像，提升加载速度
 Version: 1.2.3
 Author: bobo

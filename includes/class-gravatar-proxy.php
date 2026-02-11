@@ -19,6 +19,8 @@ class Gravatar_Proxy {
         add_action('admin_menu', [$this, 'add_settings_page']);
         add_action('admin_init', [$this, 'register_settings']);
         add_action('admin_init', [$this, 'handle_cache_actions']);
+        add_action('admin_init', [$this, 'handle_rewrite_refresh']);
+        add_action('admin_notices', [$this, 'maybe_rewrite_notice']);
     }
 
     public function proxy_gravatar_url($url, $id_or_email, $args) {
@@ -77,8 +79,54 @@ class Gravatar_Proxy {
         add_action('admin_notices', [$this, 'cache_cleared_notice']);
     }
 
+    public function handle_rewrite_refresh() {
+        if (!isset($_POST['gravatar_proxy_flush_rewrite'])) {
+            return;
+        }
+        if (!current_user_can('manage_options')) {
+            return;
+        }
+        if (!check_admin_referer('gravatar_proxy_flush_rewrite')) {
+            return;
+        }
+
+        flush_rewrite_rules();
+        add_action('admin_notices', [$this, 'rewrite_flushed_notice']);
+    }
+
     public function cache_cleared_notice() {
         echo '<div class="notice notice-success is-dismissible"><p>缓存已清空！</p></div>';
+    }
+
+    public function rewrite_flushed_notice() {
+        echo '<div class="notice notice-success is-dismissible"><p>重写规则已刷新。</p></div>';
+    }
+
+    private function rewrite_rules_missing() {
+        $rules = get_option('rewrite_rules');
+        if (!is_array($rules)) {
+            return true;
+        }
+        $needle = 'gravatar-proxy/([a-f0-9]{32})/?$';
+        if (array_key_exists($needle, $rules)) {
+            return false;
+        }
+        $needle = '^gravatar-proxy/([a-f0-9]{32})/?$';
+        return !array_key_exists($needle, $rules);
+    }
+
+    public function maybe_rewrite_notice() {
+        if (!current_user_can('manage_options')) {
+            return;
+        }
+        if (!$this->rewrite_rules_missing()) {
+            return;
+        }
+        echo '<div class="notice notice-warning"><p>Gravatar Proxy 的重写规则未生效。请在“设置 > 固定链接”保存一次，或点击下方按钮刷新规则。</p>';
+        echo '<form method="post" style="margin-top:6px;">';
+        wp_nonce_field('gravatar_proxy_flush_rewrite');
+        echo '<input type="submit" name="gravatar_proxy_flush_rewrite" class="button button-secondary" value="刷新重写规则">';
+        echo '</form></div>';
     }
 
     private function get_cache_stats() {
@@ -197,6 +245,10 @@ class Gravatar_Proxy {
                 <form method="post" class="gravatar-proxy-actions">
                     <?php wp_nonce_field('gravatar_proxy_clear_cache'); ?>
                     <input type="submit" name="gravatar_proxy_clear_cache" class="button button-secondary" value="清空所有缓存" onclick="return confirm('确定要清空所有缓存吗？');">
+                </form>
+                <form method="post" class="gravatar-proxy-actions">
+                    <?php wp_nonce_field('gravatar_proxy_flush_rewrite'); ?>
+                    <input type="submit" name="gravatar_proxy_flush_rewrite" class="button" value="刷新重写规则">
                 </form>
             </div>
 
